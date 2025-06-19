@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>EAN Skener</title>
   <style>
     body {
@@ -15,6 +15,14 @@
       margin: 0 auto 20px auto;
       border: 2px solid #ccc;
       border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #scanner video {
+      transform: scale(1.2);
+      transform-origin: center center;
+      width: 100% !important;
+      height: auto !important;
     }
     #ean-input {
       font-size: 22px;
@@ -30,6 +38,12 @@
       margin-bottom: 5px;
       color: #333;
     }
+    #tip {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+      font-style: italic;
+    }
   </style>
   <script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
 </head>
@@ -37,27 +51,35 @@
   <h2>📷 Skenovanie EAN kódu</h2>
 
   <div id="scanner"></div>
+  <div id="tip">👉 Držte telefón približne 15–25 cm od kódu pre lepší fokus</div>
 
   <div>
     <div id="manual-label">Alebo zadajte EAN ručne / pomocou skenera:</div>
-    <input type="text" id="ean-input" placeholder="Skenujte alebo zadajte EAN..." autofocus>
+    <input type="text" id="ean-input" placeholder="Skenujte alebo zadajte EAN..." autofocus />
   </div>
 
   <script>
-
+   
     Quagga.init({
       inputStream: {
         name: "Live",
         type: "LiveStream",
-        target: document.querySelector('#scanner'),
+        target: document.querySelector("#scanner"),
         constraints: {
-          facingMode: "environment"
+          facingMode: "environment",
+          aspectRatio: { ideal: 4 / 3 },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          advanced: [
+            { focusMode: "continuous" },
+            { zoom: 2.0 } 
+          ]
         }
       },
       decoder: {
         readers: ["ean_reader"]
       }
-    }, function(err) {
+    }, function (err) {
       if (err) {
         console.error(err);
         alert("Chyba kamery: " + err);
@@ -68,17 +90,17 @@
 
     let scanned = false;
 
-    Quagga.onDetected(result => {
+    Quagga.onDetected((result) => {
       if (scanned) return;
       scanned = true;
       const code = result.codeResult.code;
       redirectToSearch(code);
     });
 
-
-    const input = document.getElementById('ean-input');
-    input.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
+    
+    const input = document.getElementById("ean-input");
+    input.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
         const code = input.value.trim();
         if (code.length >= 6) {
           redirectToSearch(code);
@@ -90,7 +112,6 @@
       const url = `https://www.rcsvet.sk/vyhladavanie?search_query=${code}`;
       window.location.href = url;
     }
-
 
     window.onload = () => input.focus();
   </script>

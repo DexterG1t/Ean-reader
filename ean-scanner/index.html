@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <title>EAN Skener</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #scanner {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+  </style>
+  <script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
+</head>
+<body>
+  <h2>📷 Namiřte kameru na EAN kód</h2>
+  <div id="scanner"></div>
+
+  <script>
+    Quagga.init({
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: document.querySelector('#scanner'),
+        constraints: {
+          facingMode: "environment" // zadná kamera
+        }
+      },
+      decoder: {
+        readers: ["ean_reader"]
+      }
+    }, function(err) {
+      if (err) {
+        console.error(err);
+        alert("Chyba pri spustení kamery: " + err);
+        return;
+      }
+      Quagga.start();
+    });
+
+    let scanned = false;
+    Quagga.onDetected(result => {
+      if (scanned) return;
+      scanned = true;
+      const code = result.codeResult.code;
+      if (code) {
+        window.location.href = `https://www.rcsvet.sk/vyhladavanie?search_query=${code}`;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -51,7 +51,7 @@
   <h2>📷 Skenovanie EAN kódu</h2>
 
   <div id="scanner"></div>
-
+  <div id="tip"></div>
 
   <div>
     <div id="manual-label">Alebo zadajte EAN ručne / pomocou skenera:</div>
@@ -59,7 +59,7 @@
   </div>
 
   <script>
-   
+
     Quagga.init({
       inputStream: {
         name: "Live",
@@ -72,7 +72,7 @@
           height: { ideal: 720 },
           advanced: [
             { focusMode: "continuous" },
-            { zoom: 2.0 } 
+            { zoom: 2.0 }
           ]
         }
       },
@@ -97,7 +97,6 @@
       redirectToSearch(code);
     });
 
-    
     const input = document.getElementById("ean-input");
     input.addEventListener("keypress", function (e) {
       if (e.key === "Enter") {

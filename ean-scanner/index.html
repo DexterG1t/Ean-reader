@@ -12,25 +12,46 @@
     #scanner {
       width: 100%;
       max-width: 480px;
-      margin: 0 auto;
+      margin: 0 auto 20px auto;
       border: 2px solid #ccc;
       border-radius: 10px;
+    }
+    #ean-input {
+      font-size: 22px;
+      padding: 10px;
+      width: 90%;
+      max-width: 400px;
+      margin-top: 20px;
+      border: 2px solid #aaa;
+      border-radius: 8px;
+    }
+    #manual-label {
+      font-size: 16px;
+      margin-bottom: 5px;
+      color: #333;
     }
   </style>
   <script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
 </head>
 <body>
-  <h2>📷 Namiřte kameru na EAN kód</h2>
+  <h2>📷 Skenovanie EAN kódu</h2>
+
   <div id="scanner"></div>
 
+  <div>
+    <div id="manual-label">Alebo zadajte EAN ručne / pomocou skenera:</div>
+    <input type="text" id="ean-input" placeholder="Skenujte alebo zadajte EAN..." autofocus>
+  </div>
+
   <script>
+
     Quagga.init({
       inputStream: {
         name: "Live",
         type: "LiveStream",
         target: document.querySelector('#scanner'),
         constraints: {
-          facingMode: "environment" // zadná kamera
+          facingMode: "environment"
         }
       },
       decoder: {
@@ -39,21 +60,39 @@
     }, function(err) {
       if (err) {
         console.error(err);
-        alert("Chyba pri spustení kamery: " + err);
+        alert("Chyba kamery: " + err);
         return;
       }
       Quagga.start();
     });
 
     let scanned = false;
+
     Quagga.onDetected(result => {
       if (scanned) return;
       scanned = true;
       const code = result.codeResult.code;
-      if (code) {
-        window.location.href = `https://www.rcsvet.sk/vyhladavanie?search_query=${code}`;
+      redirectToSearch(code);
+    });
+
+
+    const input = document.getElementById('ean-input');
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const code = input.value.trim();
+        if (code.length >= 6) {
+          redirectToSearch(code);
+        }
       }
     });
+
+    function redirectToSearch(code) {
+      const url = `https://www.rcsvet.sk/vyhladavanie?search_query=${code}`;
+      window.location.href = url;
+    }
+
+
+    window.onload = () => input.focus();
   </script>
 </body>
 </html>

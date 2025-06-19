@@ -17,12 +17,27 @@
       border-radius: 10px;
       overflow: hidden;
     }
-
     #scanner video {
       transform: scale(1.2);
       transform-origin: center center;
       width: 100% !important;
       height: auto !important;
+    }
+    #controls {
+      margin: 10px 0;
+    }
+    #controls button {
+      font-size: 16px;
+      padding: 8px 16px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      background-color: #0056b3;
     }
     #ean-input {
       font-size: 22px;
@@ -51,7 +66,11 @@
   <h2>📷 Skenovanie EAN kódu</h2>
 
   <div id="scanner"></div>
-  <div id="tip"></div>
+  <div id="tip">👉 Držte telefón približne 15–25 cm od kódu pre lepší fokus</div>
+
+  <div id="controls">
+    <button onclick="toggleCamera()">🔄 Prepnúť kameru</button>
+  </div>
 
   <div>
     <div id="manual-label">Alebo zadajte EAN ručne / pomocou skenera:</div>
@@ -59,43 +78,58 @@
   </div>
 
   <script>
-
-    Quagga.init({
-      inputStream: {
-        name: "Live",
-        type: "LiveStream",
-        target: document.querySelector("#scanner"),
-        constraints: {
-          facingMode: "environment",
-          aspectRatio: { ideal: 4 / 3 },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          advanced: [
-            { focusMode: "continuous" },
-            { zoom: 2.0 }
-          ]
-        }
-      },
-      decoder: {
-        readers: ["ean_reader"]
-      }
-    }, function (err) {
-      if (err) {
-        console.error(err);
-        alert("Chyba kamery: " + err);
-        return;
-      }
-      Quagga.start();
-    });
-
     let scanned = false;
+    let currentCamera = "environment"; // Start with back camera
 
-    Quagga.onDetected((result) => {
-      if (scanned) return;
-      scanned = true;
-      const code = result.codeResult.code;
-      redirectToSearch(code);
-    });
+    function startScanner() {
+      Quagga.stop(); // остановить, если уже запущено
+
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.querySelector("#scanner"),
+          constraints: {
+            facingMode: currentCamera,
+            aspectRatio: { ideal: 4 / 3 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            advanced: [
+              { focusMode: "continuous" },
+              { zoom: 2.0 }
+            ]
+          }
+        },
+        decoder: {
+          readers: ["ean_reader"]
+        }
+      }, function (err) {
+        if (err) {
+          console.error(err);
+          alert("Chyba kamery: " + err);
+          return;
+        }
+        Quagga.start();
+      });
+
+      Quagga.onDetected((result) => {
+        if (scanned) return;
+        scanned = true;
+        const code = result.codeResult.code;
+        redirectToSearch(code);
+      });
+    }
+
+    function toggleCamera() {
+      scanned = false;
+      currentCamera = currentCamera === "environment" ? "user" : "environment";
+      startScanner();
+    }
+
+    function redirectToSearch(code) {
+      const url = `https://www.rcsvet.sk/vyhladavanie?search_query=${code}`;
+      window.location.href = url;
+    }
 
     const input = document.getElementById("ean-input");
     input.addEventListener("keypress", function (e) {
@@ -107,12 +141,10 @@
       }
     });
 
-    function redirectToSearch(code) {
-      const url = `https://www.rcsvet.sk/vyhladavanie?search_query=${code}`;
-      window.location.href = url;
-    }
-
-    window.onload = () => input.focus();
+    window.onload = () => {
+      input.focus();
+      startScanner();
+    };
   </script>
 </body>
 </html>
